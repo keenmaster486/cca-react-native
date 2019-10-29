@@ -1,13 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, TextInput, ScrollView, FlatList, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, Button, TextInput, ScrollView, FlatList, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
+
+import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
+
 
 const styles = StyleSheet.create({
 	container:
 	{
 		backgroundColor: '#fff',
 		alignItems: 'center',
-		justifyContent: 'center',
-		padding: 30
+		// justifyContent: 'center',
+		padding: 20
+		//minHeight: '100%'
 	},
 	h1:
 	{
@@ -23,17 +27,23 @@ const styles = StyleSheet.create({
 	},
 	textbox:
 	{
-		height: 40,
-		width: 200,
+		maxHeight: 200,
+		width: '95%',
 		borderColor: 'gray',
-		borderWidth: 1
+		borderWidth: 1,
+		borderRadius: 10,
+		fontSize: 16,
+		padding: 10
 	},
+	
 	scrollbox:
 	{
 		borderColor: 'black',
 		borderWidth: 1,
-		width: 300,
-		height: 300,
+		// width: 300,
+		// height: 300,
+		height: '84%',
+		minWidth: '125%',
 		padding: 20
 	},
 	button:
@@ -48,6 +58,38 @@ const styles = StyleSheet.create({
 		width: 200,
 		borderColor: 'gray',
 		borderWidth: 1
+	},
+	textInputContainer: {
+		flexDirection: 'row',
+		margin: 5
+	},
+	singleMsgContainer: {
+
+	},
+	yourMsgContainer: {
+		alignItems: 'flex-end'
+	},
+	otherMsgContainer: {
+		alignItems: 'flex-start'
+	},
+
+	singleMsgText: {
+		borderStyle: 'solid',
+		borderWidth: 0,
+		borderRadius: 10,
+		padding: 10,
+		margin: 7,
+		overflow: 'hidden',
+		minWidth: '40%',
+		maxWidth: '85%'
+	},
+	yourMsgText: {
+		backgroundColor: '#77bbFF',
+		borderBottomRightRadius: 0
+	},
+	otherMsgText: {
+		backgroundColor: '#CFCFCF',
+		borderBottomLeftRadius: 0
 	}
 });
 
@@ -103,7 +145,15 @@ class ChatBox extends React.Component
 	getUserInfo = async () =>
 	{
 		//gets the user info from the Express API and stores it in the state:
-		let userInfo = await fetch(this.props.apiURL + '/users/' + this.props.userId);
+		let userInfo = await fetch(this.props.apiURL + '/users/' + this.props.userId, {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
 		userInfo = await userInfo.json();
 		this.setState(
 		{
@@ -123,7 +173,15 @@ class ChatBox extends React.Component
 		const oldMsgLength = this.state.currentGroup.msgLength;
 
 		//gets the group info from the Express API and stores it in the state:
-		let groupInfo = await fetch(this.props.apiURL + '/groups/' + this.props.currentGroup.id);
+		let groupInfo = await fetch(this.props.apiURL + '/groups/' + this.props.currentGroup.id, {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
 		groupInfo = await groupInfo.json();
 		this.setState(
 		{
@@ -164,7 +222,15 @@ class ChatBox extends React.Component
 
 		const submitURL = await this.props.apiURL + '/groups/' + await this.state.currentGroup.id + '/messages/' + await startmsg + '/' + await endmsg;
 
-		let recentMsgs = fetch(await submitURL);
+		let recentMsgs = fetch(await submitURL, {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
 		
 		//console.log(await recentMsgs);
 		let test = await recentMsgs;
@@ -179,7 +245,8 @@ class ChatBox extends React.Component
 				key: i.toString(),
 				userdisplayname: recentMsgs[i].userdisplayname,
 				text: recentMsgs[i].text,
-				image: recentMsgs[i].image
+				image: recentMsgs[i].image,
+				userId: recentMsgs[i].userId
 			});
 		}
 
@@ -199,7 +266,10 @@ class ChatBox extends React.Component
 			method: 'POST',
 			body: JSON.stringify(newMsg),
 			headers:
-		    {"Content-Type": "application/json",}
+		    {
+		    	"Content-Type": "application/json",
+		    	"Authentication": this.props.sessionId
+		    }
 		});
 		msgResponse = await msgResponse.json();
 		console.log(msgResponse);
@@ -274,25 +344,47 @@ class ChatBox extends React.Component
 	render()
 	{
 		return(
-			<View style={styles.container}>
-				<Text style={styles.h3}>{this.state.currentGroup.name}</Text>
+			<View>
 				
-				<TextInput style={styles.textbox} onChangeText={this.handleChangeText} value={this.state.msgText}></TextInput>
-				<Button style={styles.button} title='Send' onPress={this.handleSendButton}></Button>
-
-				<ScrollView style={styles.scrollbox}>
-					<FlatList
-						data={this.state.messages}
-						renderItem=
-						{
-							({item}) =>
-							<Text style={styles.h3}>{item.userdisplayname}: {item.text}</Text>
-						}
-					/>
-					<Text style={styles.h3}></Text>
-					<Text style={styles.h3}></Text>
-				</ScrollView>
-				
+				<KeyboardAvoidingView style={styles.container} behavior="height">
+					
+					<Text style={styles.h2}>{this.state.currentGroup.name}</Text>	
+					
+						<ScrollView style={styles.scrollbox}>
+							<FlatList
+								data={this.state.messages}
+								renderItem=
+								{
+									({item}) =>
+									{
+										if (item.userId == this.props.userId)
+										{
+											return(
+												<View style={[styles.singleMsgContainer, styles.yourMsgContainer]}>
+													<View style={[styles.singleMsgText, styles.yourMsgText]}><Text>{item.userdisplayname}: {item.text}</Text></View>
+												</View>
+											);
+										}
+										else
+										{
+											return(
+												<View style={[styles.singleMsgContainer, styles.otherMsgContainer]}>
+													<View style={[styles.singleMsgText, styles.otherMsgText]}><Text>{item.userdisplayname}: {item.text}</Text></View>
+												</View>
+											);
+										}
+									}
+								}
+							/>
+							<Text style={styles.h3}></Text>
+							<Text style={styles.h3}></Text>
+						</ScrollView>
+					
+						<View style={styles.textInputContainer}>
+							<AutoGrowingTextInput style={styles.textbox} onChangeText={this.handleChangeText} value={this.state.msgText}></AutoGrowingTextInput>
+							<Button style={styles.button} title='Send' onPress={this.handleSendButton}></Button>
+						</View>
+				</KeyboardAvoidingView>
 			</View>
 		);
 	}

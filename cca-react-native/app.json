@@ -3,7 +3,7 @@
     "name": "Clean Chat App",
     "slug": "cca-react-native",
     "privacy": "public",
-    "sdkVersion": "32.0.0",
+    "sdkVersion": "35.0.0",
     "platforms": [
       "ios",
       "android"

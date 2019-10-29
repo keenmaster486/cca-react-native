@@ -5,6 +5,7 @@ import { StyleSheet, Text, View, Button, TextInput, ScrollView} from 'react-nati
 import SelectGroup from './SelectGroup/SelectGroup'
 import ChatBox from './ChatBox/ChatBox'
 
+import debugFlags from '../debugFlags.js';
 
 const styles = StyleSheet.create({
 	container:
@@ -66,6 +67,7 @@ class MainPage extends React.Component
 	handleJoinGroup = (item) =>
 	{
 		//do something
+		console.log("Attempting to enter group with id of " + item.id);
 		if (item.id == 'none') {return;}
 		this.setState(
 		{
@@ -86,11 +88,11 @@ class MainPage extends React.Component
 			<View>
 				{this.state.currentGroup.id == '' ?
 					(
-						<SelectGroup handleJoinGroup={this.handleJoinGroup} apiURL={this.props.apiURL} userId={this.props.userId}></SelectGroup>
+						<SelectGroup handleJoinGroup={this.handleJoinGroup} apiURL={this.props.apiURL} userId={this.props.userId} sessionId={this.props.sessionId}></SelectGroup>
 					)
 					:
 					(
-						<ChatBox apiURL={this.props.apiURL} currentGroup={this.state.currentGroup} userId={this.props.userId}></ChatBox>
+						<ChatBox apiURL={this.props.apiURL} currentGroup={this.state.currentGroup} userId={this.props.userId} sessionId={this.props.sessionId}></ChatBox>
 					)
 				}
 			</View>

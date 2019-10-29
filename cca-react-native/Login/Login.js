@@ -1,17 +1,22 @@
 import React from 'react';
 import { StyleSheet, Text, View, Button, TextInput, ScrollView} from 'react-native';
 
+import debugFlags from '../debugFlags.js';
+
 const styles = StyleSheet.create({
 	container:
 	{
 		backgroundColor: '#fff',
 		alignItems: 'center',
 		justifyContent: 'center',
-		padding: 30
+		borderStyle: debugFlags.borderStyle,
+		borderWidth: debugFlags.borderWidth,
+		borderColor: 'green',
+
 	},
 	h1:
 	{
-		fontSize: 35
+		fontSize: 30
 	},
 	h2:
 	{
@@ -22,7 +27,8 @@ const styles = StyleSheet.create({
 		height: 40,
 		width: 200,
 		borderColor: 'gray',
-		borderWidth: 1
+		borderWidth: 1,
+		borderRadius: 10
 	},
 	scrollbox:
 	{
@@ -102,7 +108,7 @@ class Login extends React.Component
 	{
 		return(
 			<View style={styles.container}>
-				<Text style={styles.h1}>Clean Chat App</Text>
+				<Text style={styles.h1}>CleanChat</Text>
 				<Text style={styles.h2}>Log In</Text>
 				<Text>Username:</Text>
 				<TextInput style={styles.textbox} onChangeText={this.handleChangeUsername} value={this.state.username}></TextInput>

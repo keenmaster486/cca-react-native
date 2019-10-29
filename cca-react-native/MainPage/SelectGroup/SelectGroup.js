@@ -1,13 +1,16 @@
 import React from 'react';
 import { StyleSheet, Text, View, Button, TextInput, ScrollView, FlatList, TouchableOpacity} from 'react-native';
 
+
+import debugFlags from '../../debugFlags.js';
+
+
 const styles = StyleSheet.create({
 	container:
 	{
 		backgroundColor: '#fff',
-		alignItems: 'center',
-		justifyContent: 'center',
-		padding: 30
+		height: '100%',
+		width: '100%'
 	},
 	h1:
 	{
@@ -21,20 +24,50 @@ const styles = StyleSheet.create({
 	{
 		fontSize: 20
 	},
-	textbox:
-	{
-		height: 40,
-		width: 200,
-		borderColor: 'gray',
-		borderWidth: 1
+
+	topTitle: {
+		borderStyle: 'solid',
+		borderBottomWidth: 1,
+		borderBottomColor: 'black',
+		padding: 10,
+		flexDirection: 'row'
 	},
+	newChatButton: {
+		marginLeft: '50%',
+		margin: 5,
+		borderStyle: 'solid',
+		borderWidth: 1,
+		borderColor: 'black',
+		borderRadius: 10,
+		padding: 5
+	},
+
+	groupTypePicker: {
+		flexDirection: 'row',
+		borderStyle: 'solid',
+		borderTopWidth: 1,
+		borderTopColor: 'black',
+		justifyContent: 'center'
+	},
+	
+	singleGroupType: {
+		margin: 10,
+		marginLeft: 20,
+		marginRight: 20,
+		borderStyle: 'solid',
+		borderWidth: 1,
+		borderColor: 'black',
+		borderRadius: 10,
+		padding: 10
+	},
+
 	scrollbox:
 	{
+		borderStyle: debugFlags.borderStyle,
 		borderColor: 'black',
-		borderWidth: 1,
-		width: 300,
-		height: 300,
-		padding: 20
+		borderWidth: debugFlags.borderWidth,
+		height: '100%',
+		width: '100%'
 	},
 	button:
 	{
@@ -47,6 +80,17 @@ const styles = StyleSheet.create({
 		width: 200,
 		borderColor: 'gray',
 		borderWidth: 1
+	},
+	singleGroupItem: {
+		borderStyle: 'solid',
+		borderWidth: 0,
+		borderColor: 'black',
+		padding: 20,
+		margin: 1,
+		borderRadius: 5,
+		
+		borderBottomWidth: 1,
+		borderBottomColor: 'grey'
 	}
 });
 
@@ -64,24 +108,49 @@ class SelectGroup extends React.Component
 			//STUFF
 			groups:
 			[
-				{
-					key: 'No groups to join',
-					id: 'none'
-				},
-			]
+				[ //public groups
+					{
+						key: 'No public groups here',
+						id: 'none'
+					}
+				],
+				[ //private groups
+					{
+						key: 'No private groups here',
+						id: 'none'
+					}
+				],
+				[ //DMs
+					{
+						key: 'No DMs here',
+						id: 'none'
+					}
+				]
+			],
+			whichGroups: 0
 		};
 	}
 
 	componentDidMount()
 	{
-		this.getGroups();
+		this.getPrivateGroups();
+		this.getPublicGroups();
+		this.getContacts();
 	}
 
 
-	getGroups = async () =>
+	getPrivateGroups = async () =>
 	{
 		//Get the groups from the API
-		let response = await fetch(this.props.apiURL + '/groups/foruser/' + this.props.userId);
+		let response = await fetch(this.props.apiURL + '/groups/foruser/' + this.props.userId, {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
 		response = await response.json();
 
 		//console.log(response);
@@ -99,7 +168,69 @@ class SelectGroup extends React.Component
 
 		this.setState(
 		{
-			groups: groups
+			groups: [this.state.groups[0], await groups, this.state.groups[2]]
+		});
+	}
+
+	getPublicGroups = async () =>
+	{
+		//Get the groups from the API
+		let response = await fetch(this.props.apiURL + '/groups', {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
+		response = await response.json();
+
+		//console.log(response);
+
+		let groups = [];
+
+		response.forEach((item, index) =>
+		{
+			groups.push(
+			{
+				key: item.name,
+				id: item.id
+			});
+		});
+
+		this.setState(
+		{
+			groups: [await groups, this.state.groups[1], this.state.groups[2]]
+		});
+	}
+
+
+	getContacts = async () =>
+	{
+		let contacts = await fetch(this.props.apiURL + '/users/' + this.props.userId + '/contacts', {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
+		contacts = await contacts.json();
+
+		contacts = await contacts.map((contact, index)=>
+		{
+			return(
+			{
+				key: contact.displayname,
+				id: contact._id
+			});
+		});
+
+		this.setState(
+		{
+			groups: [this.state.groups[0], this.state.groups[1], contacts]
 		});
 	}
 
@@ -108,26 +239,64 @@ class SelectGroup extends React.Component
 	handleItemPress = (item) =>
 	{
 		//console.log(item);
-		this.props.handleJoinGroup(item);
+		//this.props.handleJoinGroup(item);
+
+		switch (this.state.whichGroups)
+		{
+			case 0:
+				this.props.handleJoinGroup(item);
+				break;
+			case 1:
+				this.props.handleJoinGroup(item);
+				break;
+			case 2:
+				//something to join a DM here
+				break;
+		}
+
+	}
+
+	changeGroups = (whichGroups) =>
+	{
+		this.setState(
+		{
+			whichGroups: whichGroups
+		});
 	}
 
 	render()
 	{
 		return(
 			<View style={styles.container}>
-				<Text style={styles.h3}>Select a group to join</Text>
+				<View style={styles.topTitle}>
+					<Text style={styles.h1}>Chats</Text>
+					<TouchableOpacity style={styles.newChatButton}>
+						<Text style={styles.h3}>New</Text>
+					</TouchableOpacity>
+				</View>
 				<ScrollView style={styles.scrollbox}>
 					<FlatList
-						data={this.state.groups}
+						data={this.state.groups[this.state.whichGroups]}
 						renderItem=
 						{
 							({item}) => 
-							<TouchableOpacity onPress={this.handleItemPress.bind(null, item)}>
+							<TouchableOpacity style={styles.singleGroupItem} onPress={this.handleItemPress.bind(null, item)}>
 								<Text style={styles.h2}>{item.key}</Text>
 							</TouchableOpacity>
 						}
 					/>
 				</ScrollView>
+				<View style={styles.groupTypePicker}>
+					<TouchableOpacity style={styles.singleGroupType} onPress={this.changeGroups.bind(null, 0)}>
+						<Text style={styles.h3}>Public</Text>
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.singleGroupType} onPress={this.changeGroups.bind(null, 1)}>
+						<Text style={styles.h3}>Private</Text>
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.singleGroupType} onPress={this.changeGroups.bind(null, 2)}>
+						<Text style={styles.h3}>DMs</Text>
+					</TouchableOpacity>
+				</View>
 			</View>
 		);
 	}
