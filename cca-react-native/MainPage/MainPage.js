@@ -81,6 +81,38 @@ class MainPage extends React.Component
 		});
 	}
 
+	handleJoinDM = async (item) =>
+	{
+		
+		if (item.id == 'none') {return;}
+		//Get the group id:
+		
+		console.log(`Joining a DM group between two users: ${this.props.userId} and ${item.id}`);
+		
+		let response = await fetch(this.props.apiURL + '/groups/dms/' + this.props.userId + '/' + item.id, {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
+
+		response = await response.json();
+
+		this.setState(
+		{
+			status: 'group join id: ' + response._id,
+			currentGroup:
+			{
+				msgLength: 0,
+				name: response.name,
+				id: response._id
+			}
+		});
+
+	}
 
 	render()
 	{
@@ -88,7 +120,7 @@ class MainPage extends React.Component
 			<View>
 				{this.state.currentGroup.id == '' ?
 					(
-						<SelectGroup handleJoinGroup={this.handleJoinGroup} apiURL={this.props.apiURL} userId={this.props.userId} sessionId={this.props.sessionId}></SelectGroup>
+						<SelectGroup handleJoinGroup={this.handleJoinGroup} handleJoinDM={this.handleJoinDM} apiURL={this.props.apiURL} userId={this.props.userId} sessionId={this.props.sessionId}></SelectGroup>
 					)
 					:
 					(

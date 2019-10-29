@@ -379,7 +379,7 @@ class ChatBox extends React.Component
 							<Text style={styles.h3}></Text>
 							<Text style={styles.h3}></Text>
 						</ScrollView>
-					
+
 						<View style={styles.textInputContainer}>
 							<AutoGrowingTextInput style={styles.textbox} onChangeText={this.handleChangeText} value={this.state.msgText}></AutoGrowingTextInput>
 							<Button style={styles.button} title='Send' onPress={this.handleSendButton}></Button>

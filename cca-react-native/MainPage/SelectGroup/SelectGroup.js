@@ -247,10 +247,10 @@ class SelectGroup extends React.Component
 				this.props.handleJoinGroup(item);
 				break;
 			case 1:
-				this.props.handleJoinGroup(item);
+				this.props.handlJoinGroup(item);
 				break;
 			case 2:
-				//something to join a DM here
+				this.props.handleJoinDM(item);
 				break;
 		}
 
