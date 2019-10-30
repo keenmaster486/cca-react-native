@@ -8,13 +8,15 @@
   },
   "dependencies": {
     "expo": "^35.0.0",
-    "react": "16.8.3",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
+    "react": "16.6.0",
+    "react-native": "0.59.9",
     "react-native-auto-grow-textinput": "^1.2.1",
-    "react-native-autogrow-textinput": "^5.2.0"
+    "react-native-autogrow-textinput": "^5.2.0",
+    "watchman": "^1.0.0"
   },
   "devDependencies": {
-    "babel-preset-expo": "^7.0.0"
+    "babel-preset-expo": "^7.1.0",
+    "yarn-upgrade-all": "^0.5.2"
   },
   "private": true
 }

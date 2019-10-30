@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, TextInput, ScrollView, FlatList, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
+import { useRef, StyleSheet, Text, View, Button, TextInput, ScrollView, FlatList, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
 
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
@@ -12,6 +12,18 @@ const styles = StyleSheet.create({
 		// justifyContent: 'center',
 		padding: 20
 		//minHeight: '100%'
+	},
+	topContainer: {
+		flexDirection: 'row',
+		padding: 0,
+		color: 'blue'
+	},
+	backButton: {
+		marginRight: 25
+	},
+	backButtonText: {
+		color: 'blue',
+		fontSize: 28
 	},
 	h1:
 	{
@@ -80,7 +92,6 @@ const styles = StyleSheet.create({
 		padding: 10,
 		margin: 7,
 		overflow: 'hidden',
-		minWidth: '40%',
 		maxWidth: '85%'
 	},
 	yourMsgText: {
@@ -90,6 +101,15 @@ const styles = StyleSheet.create({
 	otherMsgText: {
 		backgroundColor: '#CFCFCF',
 		borderBottomLeftRadius: 0
+	},
+
+	msgTextName: {
+		fontSize: 16,
+		fontWeight: 'bold'
+	},
+
+	msgTextBody: {
+		fontSize: 16
 	}
 });
 
@@ -107,21 +127,23 @@ class ChatBox extends React.Component
 			//STUFF
 			messages:
 			[
-				{
-					key: '0',
-					userdisplayname: 'waiting',
-					text: 'waiting',
-					image: ''
-				}
+				// {
+				// 	key: '0',
+				// 	userdisplayname: 'waiting',
+				// 	text: 'waiting',
+				// 	image: ''
+				// }
 			],
 			currentGroup:
 			{
 				msgLength: 0,
 				id: '',
-				name: ''
+				name: '',
+				type: ''
 			},
 			msgText: ''
 		};
+		//this.flatListRef = useRef;
 	}
 
 
@@ -165,6 +187,8 @@ class ChatBox extends React.Component
 
 
 
+
+
 	getGroupInfo = async () =>
 	{
 		//don't do anything if we're in the global chatroom:
@@ -189,7 +213,9 @@ class ChatBox extends React.Component
 			{
 				name: await groupInfo.name,
 				id: await groupInfo.id,
-				msgLength: await groupInfo.msgLength
+				type: await groupInfo.type,
+				msgLength: await groupInfo.msgLength,
+				otherUserDisplayName: this.props.currentGroup.otherUserDisplayName
 			}
 		});
 		const msgLength = await groupInfo.msgLength;
@@ -197,6 +223,10 @@ class ChatBox extends React.Component
 		{
 			await this.getMessages();
 		}
+		//this.refs.flatListRef.scrollToIndex({animated: false, index: 0});
+		//this.refs.scrollBoxRef.scrollToEnd();
+		//this.flatListRef.scrollToOffset({offset: 500})
+		//setTimeout(() => this.flatListRef.scrollToEnd(), 200)
 	}
 
 
@@ -254,12 +284,16 @@ class ChatBox extends React.Component
 		{
 			messages: tempMsgs
 		});
+
+		//this.refs.scrollBoxRef.scrollToEnd();
 	}
 
 
 
 	addMsgAPICall = async (newMsg) =>
 	{
+		console.log("Doing an API call for newMsg " + newMsg.text);
+
 		const submitURL = this.props.apiURL + '/groups/' + this.state.currentGroup.id + '/messages';
 
 		let msgResponse = await fetch(submitURL, {
@@ -280,7 +314,14 @@ class ChatBox extends React.Component
 	addMsg = async () =>
 	{
 		//e.preventDefault();
-		if (this.state.msgText == '' || this.state.msgImage == '') {return;}
+		
+		console.log("Attempting to add new message with text of " + this.state.msgText);
+
+		if (this.state.msgText === '' && this.state.msgImage == '')
+		{
+			console.log("Message is empty; aborting...");
+			return;
+		}
 
 		const msgText = this.state.msgText;
 		let msgImage = null;
@@ -296,6 +337,8 @@ class ChatBox extends React.Component
 			url: '',
 			id: ''
 		};
+
+		console.log("Constructed newMsg object; text is now " + newMsg.text);
 
 		//Right here is where we should make a POST request to
 		//the Express API to add the message to the current
@@ -341,49 +384,84 @@ class ChatBox extends React.Component
 		this.addMsg();
 	}
 
+	msgTextToDisplay = (item) =>
+	{
+		switch (this.state.currentGroup.type)
+		{
+			case 'dm':
+				return (
+					<Text style={styles.msgTextBody}>{item.text}</Text>
+				);
+				break;
+			default:
+				return (
+					<View>
+						<Text style={styles.msgTextName}>{item.userdisplayname}:</Text>
+						<Text style={styles.msgTextBody}>{item.text}</Text>
+					</View>
+				);
+		}
+	}
+
 	render()
 	{
 		return(
 			<View>
 				
 				<KeyboardAvoidingView style={styles.container} behavior="height">
-					
-					<Text style={styles.h2}>{this.state.currentGroup.name}</Text>	
-					
-						<ScrollView style={styles.scrollbox}>
-							<FlatList
-								data={this.state.messages}
-								renderItem=
-								{
-									({item}) =>
+					<View style={styles.topContainer}>
+						<TouchableOpacity style={styles.backButton} onPress={this.props.exitChat}><Text style={styles.backButtonText}>{"<"}</Text></TouchableOpacity>
+						{this.state.currentGroup.type == 'dm' ?
+							<Text style={styles.h2} numberOfLines={1}>{this.state.currentGroup.otherUserDisplayName}</Text>
+						:
+							<Text style={styles.h2} numberOfLines={1}>{this.state.currentGroup.name}</Text>
+						}
+					</View>
+					<ScrollView ref='scrollBoxRef' style={styles.scrollbox}>
+						{this.state.currentGroup.id != '' ?
+							(
+							this.state.messages.length != 0 ?
+								<FlatList
+									
+									onContentSizeChange={()=>this.refs.scrollBoxRef.scrollToEnd()}
+									data={this.state.messages}
+									renderItem=
 									{
-										if (item.userId == this.props.userId)
+										({item}) =>
 										{
-											return(
-												<View style={[styles.singleMsgContainer, styles.yourMsgContainer]}>
-													<View style={[styles.singleMsgText, styles.yourMsgText]}><Text>{item.userdisplayname}: {item.text}</Text></View>
-												</View>
-											);
-										}
-										else
-										{
-											return(
-												<View style={[styles.singleMsgContainer, styles.otherMsgContainer]}>
-													<View style={[styles.singleMsgText, styles.otherMsgText]}><Text>{item.userdisplayname}: {item.text}</Text></View>
-												</View>
-											);
+											if (item.userId == this.props.userId)
+											{
+												return(
+													<View style={[styles.singleMsgContainer, styles.yourMsgContainer]}>
+														<View style={[styles.singleMsgText, styles.yourMsgText]}>{this.msgTextToDisplay(item)}</View>
+													</View>
+												);
+											}
+											else
+											{
+												return(
+													<View style={[styles.singleMsgContainer, styles.otherMsgContainer]}>
+														<View style={[styles.singleMsgText, styles.otherMsgText]}>{this.msgTextToDisplay(item)}</View>
+													</View>
+												);
+											}
 										}
 									}
-								}
-							/>
-							<Text style={styles.h3}></Text>
-							<Text style={styles.h3}></Text>
-						</ScrollView>
+								/>
+							:
+								<Text>No messages yet</Text>
+							)
+						:
+							<Text>Getting messages...</Text>
+						}
+						<Text style={styles.h3}></Text>
+						<Text style={styles.h3}></Text>
+					</ScrollView>
 
-						<View style={styles.textInputContainer}>
-							<AutoGrowingTextInput style={styles.textbox} onChangeText={this.handleChangeText} value={this.state.msgText}></AutoGrowingTextInput>
-							<Button style={styles.button} title='Send' onPress={this.handleSendButton}></Button>
-						</View>
+					<View style={styles.textInputContainer}>
+						<AutoGrowingTextInput style={styles.textbox} onChangeText={this.handleChangeText} value={this.state.msgText}></AutoGrowingTextInput>
+						<Button style={styles.button} title='Send' onPress={this.handleSendButton}></Button>
+					</View>
 				</KeyboardAvoidingView>
 			</View>
 		);

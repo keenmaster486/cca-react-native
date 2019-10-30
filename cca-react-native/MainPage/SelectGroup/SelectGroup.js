@@ -159,11 +159,14 @@ class SelectGroup extends React.Component
 
 		response.forEach((item, index) =>
 		{
-			groups.push(
+			if (item.private == true)
 			{
-				key: item.name,
-				id: item.id
-			});
+				groups.push(
+				{
+					key: item.name,
+					id: item.id
+				});
+			}
 		});
 
 		this.setState(
@@ -247,7 +250,7 @@ class SelectGroup extends React.Component
 				this.props.handleJoinGroup(item);
 				break;
 			case 1:
-				this.props.handlJoinGroup(item);
+				this.props.handleJoinGroup(item);
 				break;
 			case 2:
 				this.props.handleJoinDM(item);

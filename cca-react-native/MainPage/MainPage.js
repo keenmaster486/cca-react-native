@@ -59,7 +59,8 @@ class MainPage extends React.Component
 			{
 				msgLength: 0,
 				name: '',
-				id: ''
+				id: '',
+				otherUserDisplayName: ''
 			}
 		};
 	}
@@ -101,6 +102,22 @@ class MainPage extends React.Component
 
 		response = await response.json();
 
+		//get the other user's display name:
+
+		let response2 = await fetch(this.props.apiURL + '/users/' + item.id, {
+			method: 'GET',
+			//body: JSON.stringify(data),
+			headers:
+			{
+				"Content-Type": "application/json",
+				"Authentication": this.props.sessionId
+			}
+		});
+
+		response2 = await response2.json();
+
+		//console.log(await response2);
+
 		this.setState(
 		{
 			status: 'group join id: ' + response._id,
@@ -108,10 +125,25 @@ class MainPage extends React.Component
 			{
 				msgLength: 0,
 				name: response.name,
-				id: response._id
+				id: response._id,
+				otherUserDisplayName: response2.displayname
 			}
 		});
+		//console.log(this.state);
+	}
 
+	exitChat = () =>
+	{
+		this.setState(
+		{
+			currentGroup:
+			{
+				msgLength: 0,
+				name: '',
+				id: '',
+				otherUserDisplayName: ''
+			}
+		})
 	}
 
 	render()
@@ -124,7 +156,7 @@ class MainPage extends React.Component
 					)
 					:
 					(
-						<ChatBox apiURL={this.props.apiURL} currentGroup={this.state.currentGroup} userId={this.props.userId} sessionId={this.props.sessionId}></ChatBox>
+						<ChatBox exitChat={this.exitChat} apiURL={this.props.apiURL} currentGroup={this.state.currentGroup} userId={this.props.userId} sessionId={this.props.sessionId}></ChatBox>
 					)
 				}
 			</View>

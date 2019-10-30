@@ -1,10 +1,16 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, TextInput, ScrollView} from 'react-native';
+import { StyleSheet, Text, View, Button, TextInput, ScrollView, AsyncStorage} from 'react-native';
+
+
+
+
 
 import Login from './Login/Login';
 import MainPage from './MainPage/MainPage';
 
 import BottomMenu from './BottomMenu/BottomMenu';
+
+import Settings from './Settings/Settings';
 
 import debugFlags from './debugFlags.js';
 
@@ -70,7 +76,7 @@ class App extends React.Component
 		this.state =
 		{
 			status: 'waiting',
-			apiURL: 'http://10.0.0.9:9000',
+			apiURL: 'https://clean-chat-app.herokuapp.com',
 			loggedIn: false,
 			userId: '',
 			sessionId: '',
@@ -91,6 +97,51 @@ class App extends React.Component
 		//and flip the loggedIn information to true!
 
 
+		//Get the sessionId from local storage:
+
+		this.getLocalSessionId();
+
+	}
+
+	getLocalSessionId = async () =>
+	{
+		try
+		{
+			const localSessionId = await AsyncStorage.getItem('sessionId');
+			if (localSessionId)
+			{
+				console.log("Attempting to auto-login using localSessionId: " + localSessionId)
+				//we got it!
+				//automatically log back in by getting the session info from backend:
+				let response = await fetch(this.state.apiURL + '/auth/sessionInfo', {
+					method: 'GET',
+					//body: JSON.stringify(data),
+					headers:
+					{
+						"Content-Type": "application/json",
+						"Authentication": localSessionId
+					}
+				});
+
+				response = await response.json();
+
+				if (await response.success)
+				{
+					console.log("Success! Autologged in");
+					this.setState(
+					{
+						status: 'logged in from local sessionId',
+						loggedIn: true,
+						userId: response.userId,
+						sessionId: localSessionId
+					});
+				}
+			}
+		}
+		catch (err)
+		{
+			console.log(err);
+		}
 	}
 
 	getStatus = async() =>
@@ -116,6 +167,25 @@ class App extends React.Component
 			userId: response.userId,
 			sessionId: response.sessionId
 		});
+
+		//Set the sessionId in local storage:
+
+		AsyncStorage.setItem('sessionId', response.sessionId);
+	}
+
+	logOut = () =>
+	{
+		console.log("LOGOUT");
+
+		//destroy the locally stored session:
+		AsyncStorage.removeItem('sessionId');	
+
+		this.setState(
+		{
+			loggedIn: false,
+			userId: '',
+			sessionId: ''
+		});
 	}
 
 	whatToDisplay = () =>
@@ -129,13 +199,34 @@ class App extends React.Component
 				break;
 			case 'settings':
 				return(
-					<Text>Settings</Text>
+					<Settings apiURL={this.state.apiURL} userId={this.state.userId} sessionId={this.state.sessionId} logOut={this.logOut}></Settings>
 				)
 				break;
 			default:
 				return(
 					<Text>Nothing here</Text>
 				)
+		}
+	}
+
+	changeBottomMenuSetting = (setting) =>
+	{
+		switch (setting)
+		{
+			case 0:
+				//go to settings page
+				this.setState(
+				{
+					bottomMenuStatus: 'settings'
+				})
+				break;
+			case 1:
+				//go to chats page
+				this.setState(
+				{
+					bottomMenuStatus: 'chats'
+				});
+				break;
 		}
 	}
 
@@ -150,7 +241,7 @@ class App extends React.Component
 								{this.whatToDisplay()}
 							</View>
 							<View style={styles.bottomMenuContainer}>
-								<BottomMenu></BottomMenu>
+								<BottomMenu changeBottomMenuSetting={this.changeBottomMenuSetting}></BottomMenu>
 							</View>
 						</View>
 						:

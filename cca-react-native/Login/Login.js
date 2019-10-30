@@ -55,8 +55,8 @@ class Login extends React.Component
 		this.state =
 		{
 			//STUFF
-			username: 'keenmaster486',
-			password: 'glorP123$'
+			username: '',
+			password: ''
 		};
 	}
 
@@ -113,7 +113,7 @@ class Login extends React.Component
 				<Text>Username:</Text>
 				<TextInput style={styles.textbox} onChangeText={this.handleChangeUsername} value={this.state.username}></TextInput>
 				<Text>Password:</Text>
-				<TextInput style={styles.textbox} onChangeText={this.handleChangePassword} value={this.state.password}></TextInput>
+				<TextInput style={styles.textbox} onChangeText={this.handleChangePassword} value={this.state.password} secureTextEntry={true}></TextInput>
 				<Button style={styles.button} onPress={this.handleLogin} title='Submit'></Button>
 			</View>
 		);
