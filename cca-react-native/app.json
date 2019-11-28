@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Clean Chat App",
+    "name": "CleanChat",
     "slug": "cca-react-native",
     "privacy": "public",
     "sdkVersion": "35.0.0",
@@ -8,11 +8,11 @@
       "ios",
       "android"
     ],
-    "version": "1.0.0",
+    "version": "0.0.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/chat-icon-generic.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-cca-generic.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -23,7 +23,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.keenmaster486.cleanchat"
     }
   }
 }
